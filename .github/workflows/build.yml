@@ -38,6 +38,8 @@ jobs:
         run: |
           cd "$PROJECT_DIR"
           flutter pub get
+          PUBC="${PUB_CACHE:-$HOME/.pub-cache}"
+          find "$PUBC/hosted" -path '*/android/build.gradle*' -type f -print0 | xargs -0 -r perl -pi -e 's/(compileSdk(?:Version)?[ =]+)\d+/${1}36/'
           flutter build apk --release
 
       - uses: actions/upload-artifact@v4
