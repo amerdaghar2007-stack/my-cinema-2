@@ -1,0 +1,45 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Unzip project
+        run: |
+          mkdir project
+          unzip -q ./*.zip -d project
+          P=$(dirname "$(find project -name pubspec.yaml | head -n 1)")
+          echo "PROJECT_DIR=$P" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create android folder
+        run: |
+          flutter create --platforms=android --org com.mycinema.app --project-name my_cinema /tmp/scaffold
+          cp -r /tmp/scaffold/android "$PROJECT_DIR/android"
+          M="$PROJECT_DIR/android/app/src/main/AndroidManifest.xml"
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <application android:usesCleartextTraffic="true"#' "$M"
+
+      - name: Build
+        run: |
+          cd "$PROJECT_DIR"
+          flutter pub get
+          flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: my-cinema-apk
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
