@@ -15,6 +15,7 @@ jobs:
           unzip -q ./*.zip -d project
           P=$(dirname "$(find project -name pubspec.yaml | head -n 1)")
           echo "PROJECT_DIR=$P" >> "$GITHUB_ENV"
+          sed -i "1i import '../models/media_item.dart';" "$P/lib/screens/live_tv_screen.dart"
 
       - uses: actions/setup-java@v4
         with:
